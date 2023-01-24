@@ -1,0 +1,68 @@
+/*
+ *  ======== scheduler_setup.c ========
+ */
+
+#include <stddef.h>
+
+/* Driver Header files */
+#include <ti/drivers/GPIO.h>
+#include <ti/drivers/Timer.h>
+
+/* Board Header file */
+#include "ti_drivers_config.h"
+
+#define CONFIG_TIMER_0              0
+
+
+
+#define slice_period 100000
+
+/* Callback used for toggling the LED. */
+void timerCallback(Timer_Handle myHandle);
+extern int millis;
+
+/*
+ *  ======== mainThread ========
+ */
+void setup_Systick()
+{
+    Timer_Handle timer0;
+    Timer_Params params;
+
+    Timer_init();
+
+    /* Setting up the timer in continuous callback mode that calls the callback
+     * function every 1,000 microseconds, or 1 millisecond.
+     * This is set by the slice_period above
+     */
+
+    Timer_Params_init(&params);
+    params.period = slice_period;
+    params.periodUnits = Timer_PERIOD_US;
+    params.timerMode = Timer_CONTINUOUS_CALLBACK;
+    params.timerCallback = timerCallback;
+
+    timer0 = Timer_open(CONFIG_TIMER_0, &params);
+
+    if (timer0 == NULL) {
+        /* Failed to initialized timer */
+        while (1) {}
+        }
+
+    if (Timer_start(timer0) == Timer_STATUS_ERROR) {
+        /* Failed to start timer */
+        while (1) {}
+        }
+
+}
+
+/*
+ * This callback is called every 1,000,000 microseconds, or 1 second. Because
+ * the LED is toggled each time this function is called, the LED will blink at
+ * a rate of once every 2 seconds.
+ * */
+void timerCallback(Timer_Handle myHandle)
+    {
+    millis += slice_period;
+
+    }
